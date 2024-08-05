@@ -36,7 +36,7 @@ class Stock(models.Model):
 
 class Movimiento(models.Model):
     institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
-    lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
+    lote = models.ForeignKey(Lote, on_delete=models.CASCADE, unique=True)
     fecha = models.DateField(default=date.today)
 
     class Meta:
