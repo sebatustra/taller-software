@@ -70,5 +70,16 @@ class ConsumoListCreateView(viewsets.ModelViewSet):
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
-class ConsumoRetrieveDestroyView:
-    pass
+class ConsumoRetrieveDestroyView(viewsets.ModelViewSet):
+    
+    def retrieve(self, request, pk=None):
+        queryset = Consumo.objects.all()
+        consumo = get_object_or_404(queryset, pk=pk)
+        serializer = ConsumoSerializer(consumo)
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None):
+        queryset = Consumo.objects.all()
+        consumo = get_object_or_404(queryset, pk=pk)
+        consumo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

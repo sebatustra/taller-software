@@ -114,49 +114,49 @@ def test_list_consumo(client):
     assert len(response.data) == 2, "se agregó más de un consumo en la base de datos"
 
 
-# @pytest.mark.django_db
-# def test_get_consumo(client):
-#     client.post(
-#         "/stock/consumos",
-#         {
-#             "institucion": 1,
-#             "medicamento": 26,
-#             "cantidad": 0,
-#         },
-#         content_type="application/json",
-#     )
-#     response = client.get("/stock/consumos/1", content_type="application/json")
-#     assert response.status_code == 200, "endpoint no encontrado"
-#     assert response.data["id"] == 1, "no se obtuvieron consumos"
+@pytest.mark.django_db
+def test_get_consumo(client):
+    client.post(
+        "/stock/consumos",
+        {
+            "institucion": 1,
+            "medicamento": 26,
+            "cantidad": 0,
+        },
+        content_type="application/json",
+    )
+    response = client.get("/stock/consumos/1", content_type="application/json")
+    assert response.status_code == 200, "endpoint no encontrado"
+    assert response.data["id"] == 1, "no se obtuvieron consumos"
 
 
-# @pytest.mark.django_db
-# def test_delete_consumo(client):
-#     client.post(
-#         "/stock/consumos",
-#         {
-#             "institucion": 1,
-#             "medicamento": 26,
-#             "cantidad": 0,
-#         },
-#         content_type="application/json",
-#     )
-#     response = client.delete("/stock/consumos/1", content_type="application/json")
-#     assert response.status_code == 204, "endpoint no encontrado"
+@pytest.mark.django_db
+def test_delete_consumo(client):
+    client.post(
+        "/stock/consumos",
+        {
+            "institucion": 1,
+            "medicamento": 26,
+            "cantidad": 0,
+        },
+        content_type="application/json",
+    )
+    response = client.delete("/stock/consumos/1", content_type="application/json")
+    assert response.status_code == 204, "endpoint no encontrado"
 
-#     response = client.get("/stock/consumos/1", content_type="application/json")
-#     assert response.status_code == 404, "el movimiento no fue eliminado"
+    response = client.get("/stock/consumos/1", content_type="application/json")
+    assert response.status_code == 404, "el movimiento no fue eliminado"
 
 
-# @pytest.mark.django_db
-# def test_add_consumo_invalid_json(client):
-#     response = client.post(
-#         "/stock/consumos",
-#         {
-#             "id_institucion": 1,
-#             "id_medicamento": 26,
-#             "cantidad": 0,
-#         },
-#         content_type="application/json",
-#     )
-#     assert response.status_code == 400, "endpoint no encontrado / no se debe permitir data mal formada"
+@pytest.mark.django_db
+def test_add_consumo_invalid_json(client):
+    response = client.post(
+        "/stock/consumos",
+        {
+            "id_institucion": 1,
+            "id_medicamento": 26,
+            "cantidad": 0,
+        },
+        content_type="application/json",
+    )
+    assert response.status_code == 400, "endpoint no encontrado / no se debe permitir data mal formada"
