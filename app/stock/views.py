@@ -14,7 +14,7 @@ from .serializers import (
 )
 from rest_framework.decorators import api_view
 
-class MovimientoListCreateView(viewsets.ViewSet):
+class MovimientoListCreateView(viewsets.ModelViewSet):
 
     def list(self, request):
         queryset = Movimiento.objects.all()
@@ -25,27 +25,27 @@ class MovimientoListCreateView(viewsets.ViewSet):
         serializer = MovimientoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data)
+        return Response(serializer.errors)
 
 
 
-class MovimientoRetrieveDestroyView:
-    pass
+# class MovimientoRetrieveDestroyView:
+#     pass
 
 
-class MovimientoLoteRetrieveView:
-    pass
+# class MovimientoLoteRetrieveView:
+#     pass
 
 
-class MovimientoMedicamentoView:
-    def get():
-        pass
+# class MovimientoMedicamentoView:
+#     def get():
+#         pass
 
 
-class ConsumoListCreateView:
-    pass
+# class ConsumoListCreateView:
+#     pass
 
 
-class ConsumoRetrieveDestroyView:
-    pass
+# class ConsumoRetrieveDestroyView:
+#     pass
