@@ -3,20 +3,20 @@ from datetime import date
 
 
 # # MOVIMIENTOS
-# @pytest.mark.django_db
-# def test_add_movimientos(client):
-#     response = client.post(
-#         "/stock/movimientos",
-#         {
-#             "institucion": 1,
-#             "lote": 1,
-#         },
-#         content_type="application/json",
-#     )
-#     assert response.status_code == 201, "endpoint no encontrado"
-#     assert response.data["institucion"] == 1
-#     assert response.data["lote"] == 1
-#     assert response.data["fecha"] == str(date.today())
+@pytest.mark.django_db
+def test_add_movimientos(client):
+    response = client.post(
+        "/stock/movimientos",
+        {
+            "institucion": 1,
+            "lote": 1,
+        },
+        content_type="application/json",
+    )
+    assert response.status_code == 201, "endpoint no encontrado"
+    assert response.data["institucion"] == 1
+    assert response.data["lote"] == 1
+    assert response.data["fecha"] == str(date.today())
 
 
 @pytest.mark.django_db
