@@ -2,10 +2,10 @@ from django.urls import path
 
 from .views import (
     MovimientoListCreateView,
-    # MovimientoRetrieveDestroyView,
+    MovimientoRetrieveDestroyView,
     # MovimientoLoteRetrieveView,
     # MovimientoMedicamentoView,
-    # ConsumoListCreateView,
+    ConsumoListCreateView,
     # ConsumoRetrieveDestroyView,
     # ConsumoMedicamentoAPIView,
     # DisponibilidadMedicamentoAPIView,
@@ -16,11 +16,11 @@ from .views import (
 app_name = "stock"
 urlpatterns = [
     path("movimientos", MovimientoListCreateView.as_view({'get': 'list', 'post': 'create'}), name="movimiento-lc"),
-    # path("movimientos/<int:pk>", MovimientoRetrieveDestroyView.as_view(), name="movimiento-rud"),
+    path("movimientos/<int:pk>", MovimientoRetrieveDestroyView.as_view({'get': 'retrieve', 'delete': 'destroy'}), name="movimiento-rud"),
     # path("movimientos/<int:pk>/lote", MovimientoLoteRetrieveView.as_view(), name="movimiento-lote-lc"),
     # path("movimientos-medicamento", MovimientoMedicamentoView.as_view(), name="movimiento-medicamento-l"),
     # path("movimientos-medicamento/<int:medicamento>", MovimientoMedicamentoView.as_view(), name="movimiento-medicamento-d"),
-    # path("consumos", ConsumoListCreateView.as_view(), name="consumo-c"),
+    path("consumos", ConsumoListCreateView.as_view({'get': 'list', 'post': 'create'}), name="consumo-c"),
     # path("consumos/<int:pk>", ConsumoRetrieveDestroyView.as_view(), name="consumo-rud"),
     # path("consumos-medicamento", ConsumoMedicamentoAPIView.as_view(), name="consumo-medicamento-l"),
     # path("consumos-medicamento/<int:medicamento>", ConsumoMedicamentoAPIView.as_view(), name="consumo-medicamento-d"),
