@@ -58,7 +58,9 @@ class Stock(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
-        self.upd_has_quiebre()
+        # Solo ejecutar `upd_has_quiebre` si el objeto ya existe en la base de datos
+        if self.pk is not None:
+            self.upd_has_quiebre()
         super().save(*args, **kwargs)
 
     def upd_has_quiebre(self):
