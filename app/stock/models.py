@@ -25,12 +25,10 @@ class Consumo(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)  # Llama al método save original
         # Actualizar la cantidad del Stock asociado
-        stock, created = Stock.objects.get_or_create(
-            institucion=self.institucion,
-            medicamento=self.medicamento
-        )
+        stock, created = Stock.objects.get_or_create(institucion=self.institucion, medicamento=self.medicamento)
         stock.cantidad -= self.cantidad
         stock.save()
+
 
 class Stock(models.Model):
     institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
@@ -68,6 +66,7 @@ class Stock(models.Model):
         if quiebre:
             self.has_quiebre = self.cantidad <= quiebre.cantidad
 
+
 class Movimiento(models.Model):
     institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE, unique=True)
@@ -78,24 +77,11 @@ class Movimiento(models.Model):
 
     def __str__(self) -> str:
         return f"{self.fecha}"
-    
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # Llama al método save original
-        # Actualizar la cantidad del Stock asociado
-        stock, created = Stock.objects.get_or_create(
-            institucion=self.institucion,
-            medicamento=self.lote.medicamento
-        )
-        stock.cantidad += self.lote.cantidad
-        stock.save()
 
     def save(self, *args, **kwargs):
         if self.lote.fecha_vencimiento <= date.today():
             return
         super().save(*args, **kwargs)
-        stock, created = Stock.objects.get_or_create(
-            institucion=self.institucion,
-            medicamento=self.lote.medicamento
-        )
+        stock, created = Stock.objects.get_or_create(institucion=self.institucion, medicamento=self.lote.medicamento)
         stock.cantidad += self.lote.cantidad
         stock.save()

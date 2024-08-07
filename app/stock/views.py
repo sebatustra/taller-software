@@ -2,20 +2,10 @@ from rest_framework.views import APIView
 from datetime import date
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import (
-    Lote,
-    Consumo,
-    Stock,
-    Movimiento
-)
-from .serializers import (
-    LoteSerializer,
-    ConsumoSerializer,
-    StockSerializer,
-    MovimientoSerializer
-)
-from rest_framework.decorators import api_view
+from .models import Consumo, Movimiento
+from .serializers import ConsumoSerializer, MovimientoSerializer
 from django.shortcuts import get_object_or_404
+
 
 class MovimientoListCreateView(viewsets.ModelViewSet):
 
@@ -32,9 +22,8 @@ class MovimientoListCreateView(viewsets.ModelViewSet):
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
-
 class MovimientoRetrieveDestroyView(viewsets.ModelViewSet):
-    
+
     def retrieve(self, request, pk=None):
         queryset = Movimiento.objects.all()
         movement = get_object_or_404(queryset, pk=pk)
@@ -72,7 +61,7 @@ class ConsumoListCreateView(viewsets.ModelViewSet):
         queryset = Consumo.objects.all()
         serializer = ConsumoSerializer(queryset, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
-    
+
     def create(self, request):
         serializer = ConsumoSerializer(data=request.data)
         if serializer.is_valid():
@@ -82,7 +71,7 @@ class ConsumoListCreateView(viewsets.ModelViewSet):
 
 
 class ConsumoRetrieveDestroyView(viewsets.ModelViewSet):
-    
+
     def retrieve(self, request, pk=None):
         queryset = Consumo.objects.all()
         consumo = get_object_or_404(queryset, pk=pk)
@@ -95,11 +84,14 @@ class ConsumoRetrieveDestroyView(viewsets.ModelViewSet):
         consumo.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class ConsumoMedicamentoAPIView(APIView):
 
     def get(self, request, medicamento=None):
         if medicamento is None:
-            data = {5: {"medicamento": 5, "cantidad": 499500, "consumos": [{"institucion": 1, "cantidad": 499500, "fecha": date(2024, 7, 28)}]}}
+            data = {
+                5: {"medicamento": 5, "cantidad": 499500, "consumos": [{"institucion": 1, "cantidad": 499500, "fecha": date(2024, 7, 28)}]}
+            }
             return Response(data, status=status.HTTP_200_OK)
         else:
             if medicamento == 5:
@@ -107,7 +99,8 @@ class ConsumoMedicamentoAPIView(APIView):
                 return Response(data, status=status.HTTP_200_OK)
             else:
                 return Response([], status=status.HTTP_200_OK)
-            
+
+
 class DisponibilidadMedicamentoAPIView(APIView):
 
     def get(self, request, medicamento=None):
@@ -120,12 +113,14 @@ class DisponibilidadMedicamentoAPIView(APIView):
                 return Response(data, status=status.HTTP_200_OK)
             else:
                 return Response([], status=status.HTTP_200_OK)
-            
+
+
 class QuiebreStockAPIView(APIView):
 
     def get(self, request):
         data = [{"institucion": 1, "medicamento": 5, "stock": 500, "quiebre": 500}]
         return Response(data, status=status.HTTP_200_OK)
+
 
 class AlertaCaducidadLoteAPIView(APIView):
 
