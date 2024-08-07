@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 
 
-# # MOVIMIENTOS
+# MOVIMIENTOS
 @pytest.mark.django_db
 def test_add_movimientos(client):
     response = client.post(
