@@ -26,6 +26,18 @@ class ConsumoSerializer(serializers.ModelSerializer):
         ]
 
 
+class ConsumoMedicamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Consumo
+        fields = [
+            "id",
+            "institucion",
+            "medicamento",
+            "cantidad",
+            "fecha",
+        ]
+
+
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
@@ -48,3 +60,8 @@ class MovimientoSerializer(serializers.ModelSerializer):
             "lote",
             "fecha",
         ]
+
+
+class MovimientoMedicamentoResponseSerializer(serializers.Serializer):
+    medicamento = serializers.IntegerField()
+    # movimientos = MovimientoSerializer(many=True)
