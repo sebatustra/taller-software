@@ -34,6 +34,7 @@ def actualizar_stock_consumo(sender, instance, created, **kwargs):
             institucion=instance.institucion, medicamento=instance.medicamento, defaults={"cantidad": 0}
         )
         stock.upd_cantidad(-instance.cantidad)
+        stock.upd_has_quiebre()
 
 
 class Stock(models.Model):

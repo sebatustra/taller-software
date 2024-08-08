@@ -10,4 +10,3 @@ def upd_stock_medicamento_institucion():
     for i in Institucion.objects.all():
         for m in Medicamento.objects.all():
             s, _ = Stock.objects.get_or_create(institucion=i, medicamento=m)
-            s.upd_has_quiebre()
