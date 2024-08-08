@@ -24,20 +24,23 @@ class MovimientoLoteRetrieveView:
 
 
 class MovimientoMedicamentoView(APIView):
-    def get(self, request):
-        # Obtener todos los movimientos
-        movimientos = Movimiento.objects.select_related("institucion", "lote__medicamento")
+    def get(self, request, medicamento=None):
+        # Filtrar movimientos si se proporciona un ID de medicamento
+        if medicamento is not None:
+            movimientos = Movimiento.objects.filter(lote__medicamento_id=medicamento).select_related("institucion", "lote__medicamento")
+        else:
+            movimientos = Movimiento.objects.select_related("institucion", "lote__medicamento")
 
         # Crear un diccionario para agrupar movimientos por medicamento
         medicamentos_movimientos = {}
 
         for movimiento in movimientos:
-            medicamento = movimiento.lote.medicamento.id  # type: ignore
+            med_id = movimiento.lote.medicamento.id  # type: ignore
 
-            if medicamento not in medicamentos_movimientos:
-                medicamentos_movimientos[medicamento] = {"medicamento": medicamento, "movimientos": []}
+            if med_id not in medicamentos_movimientos:
+                medicamentos_movimientos[med_id] = {"medicamento": med_id, "movimientos": []}
 
-            medicamentos_movimientos[medicamento]["movimientos"].append(
+            medicamentos_movimientos[med_id]["movimientos"].append(
                 {
                     "lote": movimiento.lote.id,  # type: ignore
                     "institucion": movimiento.institucion.id,  # type: ignore
