@@ -31,9 +31,7 @@ class Consumo(models.Model):
 def actualizar_stock_consumo(sender, instance, created, **kwargs):
     if created:
         stock, created = Stock.objects.get_or_create(
-            institucion=instance.institucion,
-            medicamento=instance.medicamento,
-            defaults={'cantidad': 0}
+            institucion=instance.institucion, medicamento=instance.medicamento, defaults={"cantidad": 0}
         )
         stock.upd_cantidad(-instance.cantidad)
 
@@ -86,7 +84,9 @@ class Stock(models.Model):
             self.has_quiebre = self.cantidad <= quiebre.cantidad
         else:
             self.has_quiebre = False
+
     ###################################################################
+
 
 class Movimiento(models.Model):
     institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
@@ -95,6 +95,7 @@ class Movimiento(models.Model):
 
     class Meta:
         unique_together = [("lote")]
+
 
 # IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock
 # @receiver(post_save, sender=Movimiento)
@@ -108,13 +109,11 @@ class Movimiento(models.Model):
 #         stock.save()
 # ###################################################################
 
+
 # IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock, test_workflow_calculo_quiebre_stock y test_workflow_calculo_caducidad
 @receiver(post_save, sender=Movimiento)
 def actualizar_stock_movimiento(sender, instance, created, **kwargs):
     if created:
-        stock, created = Stock.objects.get_or_create(
-            institucion=instance.institucion,
-            medicamento=instance.lote.medicamento
-        )
+        stock, created = Stock.objects.get_or_create(institucion=instance.institucion, medicamento=instance.lote.medicamento)
         stock.upd_cantidad(instance.lote.cantidad, fecha_vencimiento=instance.lote.fecha_vencimiento)
         stock.save()

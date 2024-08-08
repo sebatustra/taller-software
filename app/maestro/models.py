@@ -27,10 +27,8 @@ class Institucion(models.Model):
     nombre = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=Tipo.choices)
     titularidad = models.CharField(max_length=20, choices=Titularidad.choices)
-    num_camas_uti = models.PositiveSmallIntegerField(
-        verbose_name="Número de Camas UTI")
-    num_camas_uci = models.PositiveSmallIntegerField(
-        verbose_name="Número de Camas UCI")
+    num_camas_uti = models.PositiveSmallIntegerField(verbose_name="Número de Camas UTI")
+    num_camas_uci = models.PositiveSmallIntegerField(verbose_name="Número de Camas UCI")
     factor = models.FloatField(help_text="Factor")
 
     def __str__(self) -> str:
@@ -60,27 +58,19 @@ class Medicamento(models.Model):
 
     nombre_comercial = models.CharField(max_length=255)
     nombre_generico = models.CharField(max_length=255, null=True, blank=True)
-    ingredientes = models.CharField(
-        max_length=255, help_text="Ingredientes químicos o sustancias activas presentes.")
-    concentracion = models.CharField(
-        max_length=255, help_text="Cantidad de sustancia activa presente en cada unidad.")
-    forma_presentacion = models.CharField(
-        max_length=16, choices=FormaPresentacion.choices)
-    forma_farmaceutica = models.CharField(
-        max_length=16, choices=FormaFarmaceutica.choices)
+    ingredientes = models.CharField(max_length=255, help_text="Ingredientes químicos o sustancias activas presentes.")
+    concentracion = models.CharField(max_length=255, help_text="Cantidad de sustancia activa presente en cada unidad.")
+    forma_presentacion = models.CharField(max_length=16, choices=FormaPresentacion.choices)
+    forma_farmaceutica = models.CharField(max_length=16, choices=FormaFarmaceutica.choices)
     via_administracion = models.CharField(max_length=16, choices=Via.choices)
     indicaciones_terapeuticas = models.CharField(
         max_length=255, null=True, blank=True, help_text="Condiciones o enfermedades para las cuales se prescribe."
     )
-    contraindicaciones = models.CharField(
-        max_length=255, null=True, blank=True)
-    efectos_secundarios = models.CharField(
-        max_length=255, null=True, blank=True)
-    instrucciones_dosificacion = models.CharField(
-        max_length=255, null=True, blank=True)
+    contraindicaciones = models.CharField(max_length=255, null=True, blank=True)
+    efectos_secundarios = models.CharField(max_length=255, null=True, blank=True)
+    instrucciones_dosificacion = models.CharField(max_length=255, null=True, blank=True)
     fabricante = models.CharField(max_length=255)
-    informacion_almacenamiento = models.CharField(
-        max_length=255, null=True, blank=True)
+    informacion_almacenamiento = models.CharField(max_length=255, null=True, blank=True)
     interacciones_medicamentosas = models.CharField(
         max_length=255, null=True, blank=True, help_text="Interacciones conocidas con otros medicamentos o sustencias."
     )

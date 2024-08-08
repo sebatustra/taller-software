@@ -59,8 +59,4 @@ class EquipamientoSerializer(serializers.ModelSerializer):
 class QuiebreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiebre
-        fields = [
-            "institucion",
-            "medicamento",
-            "cantidad"
-        ]
+        fields = ["institucion", "medicamento", "cantidad"]
