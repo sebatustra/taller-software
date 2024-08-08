@@ -1,156 +1,151 @@
-from rest_framework.views import APIView
-from datetime import date
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
+from rest_framework import status
+
+from maestro.models import Medicamento
 from .models import (
-    Lote,
     Consumo,
-    Stock,
     Movimiento
 )
 from .serializers import (
-    LoteSerializer,
-    ConsumoSerializer,
-    StockSerializer,
-    MovimientoSerializer
+    MovimientoMedicamentoResponseSerializer,
+    MovimientoSerializer,
+    ConsumoSerializer
 )
-from rest_framework.decorators import api_view
-from django.shortcuts import get_object_or_404
+
+from rest_framework.views import APIView
+
 
 class MovimientoListCreateView(viewsets.ModelViewSet):
-
-    def list(self, request):
-        queryset = Movimiento.objects.all()
-        serializer = MovimientoSerializer(queryset, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-
-    def create(self, request):
-        serializer = MovimientoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-
+    serializer_class = MovimientoSerializer
+    queryset = Movimiento.objects.all()
 
 
 class MovimientoRetrieveDestroyView(viewsets.ModelViewSet):
-    
-    def retrieve(self, request, pk=None):
-        queryset = Movimiento.objects.all()
-        movement = get_object_or_404(queryset, pk=pk)
-        serializer = MovimientoSerializer(movement)
-        return Response(serializer.data)
-
-    def destroy(self, request, pk=None):
-        queryset = Movimiento.objects.all()
-        movement = get_object_or_404(queryset, pk=pk)
-        movement.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    serializer_class = MovimientoSerializer
+    queryset = Movimiento.objects.all()
 
 
-# class MovimientoLoteRetrieveView:
-#     pass
+class MovimientoLoteRetrieveView:
+    pass
 
 
 class MovimientoMedicamentoView(APIView):
+    def get(self, request):
+        # Obtener todos los movimientos
+        movimientos = Movimiento.objects.select_related(
+            'institucion', 'lote__medicamento')
 
-    def get(self, request, medicamento=None):
-        if medicamento is None:
-            data = {"medicamento": 5, "movimientos": [{"lote": 20, "institucion": 1, "fecha": date(2024, 7, 28)}]}
-            return Response([data], status=status.HTTP_200_OK)
-        else:
-            if medicamento == 5:
-                data = [{"lote": 20, "institucion": 1, "fecha": date(2024, 7, 28)}]
-                return Response(data, status=status.HTTP_200_OK)
-            else:
-                return Response([], status=status.HTTP_200_OK)
+        # Crear un diccionario para agrupar movimientos por medicamento
+        medicamentos_movimientos = {}
+
+        for movimiento in movimientos:
+            medicamento = movimiento.lote.medicamento.id # type: ignore
+
+            if medicamento not in medicamentos_movimientos:
+                medicamentos_movimientos[medicamento] = {
+                    "medicamento": medicamento,
+                    "movimientos": []
+                }
+
+            medicamentos_movimientos[medicamento]["movimientos"].append({
+                "lote": movimiento.lote.id, # type: ignore
+                "institucion": movimiento.institucion.id, # type: ignore
+                "fecha": movimiento.fecha
+            })
+
+        # Convertir el diccionario a una lista
+        resultado = list(medicamentos_movimientos.values())
+
+        return Response(resultado, status=status.HTTP_200_OK)
 
 
 class ConsumoListCreateView(viewsets.ModelViewSet):
-
-    def list(self, request):
-        queryset = Consumo.objects.all()
-        serializer = ConsumoSerializer(queryset, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-    
-    def create(self, request):
-        serializer = ConsumoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status.HTTP_201_CREATED)
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    serializer_class = ConsumoSerializer
+    queryset = Consumo.objects.all()
 
 
 class ConsumoRetrieveDestroyView(viewsets.ModelViewSet):
+    serializer_class = ConsumoSerializer
+    queryset = Consumo.objects.all()
+
+
+# class ConsumoMedicamentoAPIView(viewsets.ModelViewSet):
+#     serializer_class = ConsumoSerializer
+#     queryset = Consumo.objects.all()
+
+# IMPLEMENTACION PARA EL TEST AVANZADO 101_a_stock_endpoints_tests ->test_consumo_medicamento
+# class ConsumoMedicamentoAPIView(APIView):
+#     def get(self, request):
+#         consumos = Consumo.objects.select_related('institucion', 'medicamento')
+
+#         medicamentos_consumos = {}
+#         for consumo in consumos:
+#             medicamento_id = consumo.medicamento.id
+#             if medicamento_id not in medicamentos_consumos:
+#                 medicamentos_consumos[medicamento_id] = {
+#                     "medicamento": medicamento_id,
+#                     "cantidad": 0,
+#                     "consumos": []
+#                 }
+
+#             medicamentos_consumos[medicamento_id]["cantidad"] += consumo.cantidad
+#             medicamentos_consumos[medicamento_id]["consumos"].append({
+#                 "institucion": consumo.institucion.id,
+#                 "cantidad": consumo.cantidad,
+#                 "fecha": consumo.fecha
+#             })
+
+#         resultado = medicamentos_consumos
+
+#         return Response(resultado, status=status.HTTP_200_OK)
     
-    def retrieve(self, request, pk=None):
-        queryset = Consumo.objects.all()
-        consumo = get_object_or_404(queryset, pk=pk)
-        serializer = ConsumoSerializer(consumo)
-        return Response(serializer.data)
-
-    def destroy(self, request, pk=None):
-        queryset = Consumo.objects.all()
-        consumo = get_object_or_404(queryset, pk=pk)
-        consumo.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+# IMPLEMENTACION PARA EL TEST AVANZADO 101_a_stock_endpoints_tests ->test_consumo_medicamento_id
 class ConsumoMedicamentoAPIView(APIView):
-
     def get(self, request, medicamento=None):
-        if medicamento is None:
-            data = {5: {"medicamento": 5, "cantidad": 499500, "consumos": [{"institucion": 1, "cantidad": 499500, "fecha": date(2024, 7, 28)}]}}
-            return Response(data, status=status.HTTP_200_OK)
-        else:
-            if medicamento == 5:
-                data = [{"institucion": 1, "cantidad": 499500, "fecha": date(2024, 7, 28)}]
-                return Response(data, status=status.HTTP_200_OK)
-            else:
+        if medicamento:
+            consumos = Consumo.objects.filter(medicamento_id=medicamento).select_related('institucion', 'medicamento')
+
+            if not consumos.exists():
                 return Response([], status=status.HTTP_200_OK)
-            
-class DisponibilidadMedicamentoAPIView(APIView):
 
-    def get(self, request, medicamento=None):
-        if medicamento is None:
-            data = {5: {"medicamento": 5, "cantidad": 500, "stocks": [{"institucion": 1, "cantidad": 500}]}}
-            return Response(data, status=status.HTTP_200_OK)
+            medicamento_consumos = {
+                "medicamento": medicamento,
+                "cantidad": 0,
+                "consumos": []
+            }
+
+            for consumo in consumos:
+                medicamento_consumos["cantidad"] += consumo.cantidad
+                medicamento_consumos["consumos"].append({
+                    "institucion": consumo.institucion.id, # type: ignore
+                    "cantidad": consumo.cantidad,
+                    "fecha": consumo.fecha
+                })
+
+            resultado = [medicamento_consumos]
+
+            return Response(resultado, status=status.HTTP_200_OK)
         else:
-            if medicamento == 5:
-                data = [{"institucion": 1, "cantidad": 500}]
-                return Response(data, status=status.HTTP_200_OK)
-            else:
-                return Response([], status=status.HTTP_200_OK)
-            
-class QuiebreStockAPIView(APIView):
+            consumos = Consumo.objects.select_related('institucion', 'medicamento')
 
-    def get(self, request):
-        data = [{"institucion": 1, "medicamento": 5, "stock": 500, "quiebre": 500}]
-        return Response(data, status=status.HTTP_200_OK)
+            medicamentos_consumos = {}
+            for consumo in consumos:
+                medicamento_id = consumo.medicamento.id # type: ignore
+                if medicamento_id not in medicamentos_consumos:
+                    medicamentos_consumos[medicamento_id] = {
+                        "medicamento": medicamento_id,
+                        "cantidad": 0,
+                        "consumos": []
+                    }
 
-class AlertaCaducidadLoteAPIView(APIView):
+                medicamentos_consumos[medicamento_id]["cantidad"] += consumo.cantidad
+                medicamentos_consumos[medicamento_id]["consumos"].append({
+                    "institucion": consumo.institucion.id, # type: ignore
+                    "cantidad": consumo.cantidad,
+                    "fecha": consumo.fecha
+                })
 
-    def get(self, request):
-        data = [
-            {
-                "id": 16,
-                "codigo": "SA_NAHRD_5j2mDrL9x0xKCl_20240721_20330721",
-                "medicamento": 23,
-                "cantidad": 450000,
-                "fecha_vencimiento": "2022-07-21",
-            },
-            {
-                "id": 17,
-                "codigo": "SE_ASBRD_8N9uLf3P8qfNCl_20240730_20330730",
-                "medicamento": 34,
-                "cantidad": 775000,
-                "fecha_vencimiento": "2022-07-30",
-            },
-            {
-                "id": 18,
-                "codigo": "TR_ABDRG_5p3WLiH4m7eFCl_20240726_20330726",
-                "medicamento": 2,
-                "cantidad": 575000,
-                "fecha_vencimiento": "2022-07-26",
-            },
-        ]
-        return Response(data, status=status.HTTP_200_OK)
+            resultado = medicamentos_consumos
+
+            return Response(resultado, status=status.HTTP_200_OK)    

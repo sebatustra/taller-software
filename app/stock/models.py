@@ -1,6 +1,10 @@
-from datetime import date
 from django.db import models
-from maestro.models import Medicamento, Institucion, Quiebre
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+
+from datetime import date
+
+from maestro.models import Institucion, Medicamento, Quiebre
 
 
 class Lote(models.Model):
@@ -22,15 +26,17 @@ class Consumo(models.Model):
     def __str__(self) -> str:
         return f"{self.cantidad}"
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # Llama al método save original
-        # Actualizar la cantidad del Stock asociado
+
+@receiver(post_save, sender=Consumo)
+def actualizar_stock_consumo(sender, instance, created, **kwargs):
+    if created:
         stock, created = Stock.objects.get_or_create(
-            institucion=self.institucion,
-            medicamento=self.medicamento
+            institucion=instance.institucion,
+            medicamento=instance.medicamento,
+            defaults={'cantidad': 0}
         )
-        stock.cantidad -= self.cantidad
-        stock.save()
+        stock.upd_cantidad(-instance.cantidad)
+
 
 class Stock(models.Model):
     institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
@@ -39,63 +45,76 @@ class Stock(models.Model):
     has_quiebre = models.BooleanField(default=False)
     fecha_actualizacion = models.DateField(auto_now=True)
 
-    def __str__(self) -> str:
-        return f"{self.has_quiebre}"
+    # IMPLEMENTACION SOLO PARA EL TEST AVANZADO test_workflow_calculo_stock
+    # def upd_cantidad(self, cantidad: int) -> None:
+    #     self.cantidad += cantidad
+    #     if self.cantidad <= 0:
+    #         self.cantidad = 0
+    #     self.save()
+    ####################################################################
 
-    def upd_cantidad(self):
-        """
-        Calcula la cantidad total del medicamento en el stock,
-        basándose en los movimientos y consumos.
-        """
-        # Obtener todos los movimientos asociados a este stock
-        movimientos = Movimiento.objects.filter(lote__medicamento=self.medicamento, lote__institucion=self.institucion)
-        cantidad_entradas = sum(movimiento.lote.cantidad for movimiento in movimientos)
+    # IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock y test_workflow_calculo_quiebre_stock
+    # def upd_cantidad(self, cantidad: int) -> None:
+    #     self.cantidad += cantidad
+    #     if self.cantidad <= 0:
+    #         self.cantidad = 0
+    #     self.upd_has_quiebre()
+    #     self.save()
 
-        # Obtener todos los consumos asociados a este stock
-        consumos = Consumo.objects.filter(medicamento=self.medicamento, institucion=self.institucion)
-        cantidad_salidas = sum(consumo.cantidad for consumo in consumos)
+    # def upd_has_quiebre(self) -> None:
+    #     quiebre = Quiebre.objects.filter(institucion=self.institucion, medicamento=self.medicamento).first()
+    #     if quiebre:
+    #         self.has_quiebre = self.cantidad <= quiebre.cantidad
+    #     else:
+    #         self.has_quiebre = False
+    ####################################################################
 
-        # Calcular la cantidad total
-        self.cantidad = cantidad_entradas - cantidad_salidas
+    # IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock, test_workflow_calculo_quiebre_stock y test_workflow_calculo_caducidad
+    def upd_cantidad(self, cantidad: int, fecha_vencimiento: date = None) -> None:
+        if fecha_vencimiento and fecha_vencimiento <= date.today():
+            # No incrementar stock si el lote está vencido
+            return
+        self.cantidad += cantidad
+        if self.cantidad <= 0:
+            self.cantidad = 0
+        self.upd_has_quiebre()
         self.save()
 
-    def save(self, *args, **kwargs):
-        self.upd_has_quiebre()
-        super().save(*args, **kwargs)
-
-    def upd_has_quiebre(self):
+    def upd_has_quiebre(self) -> None:
         quiebre = Quiebre.objects.filter(institucion=self.institucion, medicamento=self.medicamento).first()
         if quiebre:
             self.has_quiebre = self.cantidad <= quiebre.cantidad
+        else:
+            self.has_quiebre = False
+    ###################################################################
 
 class Movimiento(models.Model):
     institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE, unique=True)
-    fecha = models.DateField(default=date.today)
+    fecha = models.DateField(auto_now=True)
 
     class Meta:
         unique_together = [("lote")]
 
-    def __str__(self) -> str:
-        return f"{self.fecha}"
-    
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # Llama al método save original
-        # Actualizar la cantidad del Stock asociado
-        stock, created = Stock.objects.get_or_create(
-            institucion=self.institucion,
-            medicamento=self.lote.medicamento
-        )
-        stock.cantidad += self.lote.cantidad
-        stock.save()
+# IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock
+# @receiver(post_save, sender=Movimiento)
+# def actualizar_stock_movimiento(sender, instance, created, **kwargs):
+#     if created:
+#         stock, created = Stock.objects.get_or_create(
+#             institucion=instance.institucion,
+#             medicamento=instance.lote.medicamento
+#         )
+#         stock.upd_cantidad(instance.lote.cantidad)
+#         stock.save()
+# ###################################################################
 
-    def save(self, *args, **kwargs):
-        if self.lote.fecha_vencimiento <= date.today():
-            return
-        super().save(*args, **kwargs)
+# IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock, test_workflow_calculo_quiebre_stock y test_workflow_calculo_caducidad
+@receiver(post_save, sender=Movimiento)
+def actualizar_stock_movimiento(sender, instance, created, **kwargs):
+    if created:
         stock, created = Stock.objects.get_or_create(
-            institucion=self.institucion,
-            medicamento=self.lote.medicamento
+            institucion=instance.institucion,
+            medicamento=instance.lote.medicamento
         )
-        stock.cantidad += self.lote.cantidad
+        stock.upd_cantidad(instance.lote.cantidad, fecha_vencimiento=instance.lote.fecha_vencimiento)
         stock.save()
