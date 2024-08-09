@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 # from maestro.models import Medicamento
-from .models import Consumo, Movimiento
+from .models import Consumo, Movimiento, Medicamento, Stock
 from .serializers import MovimientoSerializer, ConsumoSerializer
 
 from rest_framework.views import APIView
@@ -132,3 +132,39 @@ class ConsumoMedicamentoAPIView(APIView):
             resultado = medicamentos_consumos
 
             return Response(resultado, status=status.HTTP_200_OK)
+
+class DisponibilidadMedicamentoAPIView(APIView):
+    def get(self, request, medicamento=None):
+        if medicamento:
+            stocks = Stock.objects.filter(medicamento_id=medicamento).select_related('institucion')
+            
+            if not stocks.exists():
+                return Response([], status=status.HTTP_200_OK)
+            
+            medicamento_stock = {
+                "medicamento": medicamento,
+                "cantidad": sum(stock.cantidad for stock in stocks),
+                "stocks": [
+                    {"institucion": stock.institucion.id, "cantidad": stock.cantidad}
+                    for stock in stocks
+                ]
+            }
+            resultado = {medicamento: medicamento_stock}
+        else:
+            stocks = Stock.objects.select_related('institucion', 'medicamento')
+            resultado = {}
+            for stock in stocks:
+                medicamento_id = stock.medicamento.id
+                if medicamento_id not in resultado:
+                    resultado[medicamento_id] = {
+                        "medicamento": medicamento_id,
+                        "cantidad": 0,
+                        "stocks": []
+                    }
+                resultado[medicamento_id]["cantidad"] += stock.cantidad
+                resultado[medicamento_id]["stocks"].append({
+                    "institucion": stock.institucion.id,
+                    "cantidad": stock.cantidad
+                })
+        
+        return Response(resultado, status=status.HTTP_200_OK)

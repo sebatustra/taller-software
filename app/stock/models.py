@@ -33,7 +33,7 @@ def actualizar_stock_consumo(sender, instance, created, **kwargs):
         stock, created = Stock.objects.get_or_create(
             institucion=instance.institucion, medicamento=instance.medicamento, defaults={"cantidad": 0}
         )
-        stock.upd_cantidad(-instance.cantidad)
+        stock.upd_cantidad()
         stock.upd_has_quiebre()
 
 
@@ -69,14 +69,13 @@ class Stock(models.Model):
     ####################################################################
 
     # IMPLEMENTACION PARA EL TEST AVANZADO test_workflow_calculo_stock, test_workflow_calculo_quiebre_stock y test_workflow_calculo_caducidad
-    def upd_cantidad(self, cantidad: int, fecha_vencimiento: date = None) -> None:
-        if fecha_vencimiento and fecha_vencimiento <= date.today():
-            # No incrementar stock si el lote está vencido
-            return
-        self.cantidad += cantidad
-        if self.cantidad <= 0:
-            self.cantidad = 0
-        self.upd_has_quiebre()
+    def upd_cantidad(self):
+        self.cantidad = 0
+        for m in Movimiento.objects.filter(institucion=self.institucion, lote__medicamento=self.medicamento):
+            if m.lote.fecha_vencimiento > date.today():
+                self.cantidad = self.cantidad + m.lote.cantidad
+        for c in Consumo.objects.filter(institucion=self.institucion, medicamento=self.medicamento):
+            self.cantidad = self.cantidad - c.cantidad
         self.save()
 
     def upd_has_quiebre(self) -> None:
@@ -116,5 +115,6 @@ class Movimiento(models.Model):
 def actualizar_stock_movimiento(sender, instance, created, **kwargs):
     if created:
         stock, created = Stock.objects.get_or_create(institucion=instance.institucion, medicamento=instance.lote.medicamento)
-        stock.upd_cantidad(instance.lote.cantidad, fecha_vencimiento=instance.lote.fecha_vencimiento)
+        stock.upd_cantidad()
+        stock.upd_has_quiebre()
         stock.save()
