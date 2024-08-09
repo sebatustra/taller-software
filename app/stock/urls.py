@@ -8,7 +8,7 @@ from .views import (
     ConsumoListCreateView,
     ConsumoRetrieveDestroyView,
     ConsumoMedicamentoAPIView,
-    #    DisponibilidadMedicamentoAPIView,
+       DisponibilidadMedicamentoAPIView,
     #    QuiebreStockAPIView,
     #    AlertaCaducidadLoteAPIView,
 )
@@ -24,8 +24,8 @@ urlpatterns = [
     path("consumos/<int:pk>", ConsumoRetrieveDestroyView.as_view({"get": "retrieve", "delete": "destroy"}), name="consumo-rud"),
     path("consumos-medicamento", ConsumoMedicamentoAPIView.as_view(), name="consumo-medicamento-l"),
     path("consumos-medicamento/<int:medicamento>", ConsumoMedicamentoAPIView.as_view(), name="consumo-medicamento-d"),
-    #    path("disponibilidad-medicamento", DisponibilidadMedicamentoAPIView.as_view(), name="disponibilidad-medicamento-l"),
-    #     path("disponibilidad-medicamento/<int:medicamento>", DisponibilidadMedicamentoAPIView.as_view(), name="disponibilidad-medicamento-d"),
+    path("disponibilidad-medicamento", DisponibilidadMedicamentoAPIView.as_view(), name="disponibilidad-medicamento-l"),
+    path("disponibilidad-medicamento/<int:medicamento>", DisponibilidadMedicamentoAPIView.as_view(), name="disponibilidad-medicamento-d"),
     #     path("quiebre-stock", QuiebreStockAPIView.as_view(), name="quiebre-stock"),
     #     path("alerta-caducidad-lote", AlertaCaducidadLoteAPIView.as_view(), name="alerta-caducidad-lote"),
 ]
