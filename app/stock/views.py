@@ -4,7 +4,7 @@ from rest_framework import status
 from datetime import date
 
 # from maestro.models import Medicamento
-from .models import Consumo, Movimiento, Medicamento, Stock, Lote
+from .models import Consumo, Movimiento, Stock, Lote
 from .serializers import MovimientoSerializer, ConsumoSerializer
 
 from rest_framework.views import APIView
@@ -134,46 +134,37 @@ class ConsumoMedicamentoAPIView(APIView):
 
             return Response(resultado, status=status.HTTP_200_OK)
 
+
 class DisponibilidadMedicamentoAPIView(APIView):
     def get(self, request, medicamento=None):
         if medicamento:
-            stocks = Stock.objects.filter(medicamento_id=medicamento).select_related('institucion')
-            
+            stocks = Stock.objects.filter(medicamento_id=medicamento).select_related("institucion")
+
             if not stocks.exists():
                 return Response([], status=status.HTTP_200_OK)
-            
+
             medicamento_stock = {
                 "medicamento": medicamento,
                 "cantidad": sum(stock.cantidad for stock in stocks),
-                "stocks": [
-                    {"institucion": stock.institucion.id, "cantidad": stock.cantidad}
-                    for stock in stocks
-                ]
+                "stocks": [{"institucion": stock.institucion.id, "cantidad": stock.cantidad} for stock in stocks],
             }
             resultado = {medicamento: medicamento_stock}
         else:
-            stocks = Stock.objects.select_related('institucion', 'medicamento')
+            stocks = Stock.objects.select_related("institucion", "medicamento")
             resultado = {}
             for stock in stocks:
                 medicamento_id = stock.medicamento.id
                 if medicamento_id not in resultado:
-                    resultado[medicamento_id] = {
-                        "medicamento": medicamento_id,
-                        "cantidad": 0,
-                        "stocks": []
-                    }
+                    resultado[medicamento_id] = {"medicamento": medicamento_id, "cantidad": 0, "stocks": []}
                 resultado[medicamento_id]["cantidad"] += stock.cantidad
-                resultado[medicamento_id]["stocks"].append({
-                    "institucion": stock.institucion.id,
-                    "cantidad": stock.cantidad
-                })
-        
+                resultado[medicamento_id]["stocks"].append({"institucion": stock.institucion.id, "cantidad": stock.cantidad})
+
         return Response(resultado, status=status.HTTP_200_OK)
 
 
 class QuiebreStockAPIView(APIView):
     def get(self, request):
-        stocks = Stock.objects.select_related('institucion')
+        stocks = Stock.objects.select_related("institucion")
 
         if not stocks.exists():
             return Response([], status=status.HTTP_200_OK)
@@ -183,21 +174,17 @@ class QuiebreStockAPIView(APIView):
         for stock in stocks:
             medicamento_id = stock.medicamento.id
             if medicamento_id not in resultado:
-                resultado_obj = {
-                    "institucion": stock.institucion.id,
-                    "medicamento": medicamento_id,
-                    "quiebre": 0,
-                    "stock": 0
-                }
+                resultado_obj = {"institucion": stock.institucion.id, "medicamento": medicamento_id, "quiebre": 0, "stock": 0}
             resultado_obj["quiebre"] += stock.cantidad if stock.has_quiebre else 0
             resultado_obj["stock"] += stock.cantidad
             resultado.append(resultado_obj)
-        
+
         return Response(resultado, status=status.HTTP_200_OK)
+
 
 class AlertaCaducidadLoteAPIView(APIView):
     def get(self, request):
-        lotes = Lote.objects.select_related('medicamento')
+        lotes = Lote.objects.select_related("medicamento")
 
         if not lotes.exists():
             return Response([], status=status.HTTP_200_OK)
@@ -211,8 +198,8 @@ class AlertaCaducidadLoteAPIView(APIView):
                     "codigo": lote.codigo,
                     "medicamento": lote.medicamento.id,
                     "cantidad": lote.cantidad,
-                    "fecha_vencimiento": lote.fecha_vencimiento.strftime("%Y-%m-%d")
+                    "fecha_vencimiento": lote.fecha_vencimiento.strftime("%Y-%m-%d"),
                 }
                 resultado.append(objeto)
-        
+
         return Response(resultado, status=status.HTTP_200_OK)
