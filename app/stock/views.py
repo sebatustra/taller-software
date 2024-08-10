@@ -1,9 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import date
 
 # from maestro.models import Medicamento
-from .models import Consumo, Movimiento, Medicamento, Stock
+from .models import Consumo, Movimiento, Medicamento, Stock, Lote
 from .serializers import MovimientoSerializer, ConsumoSerializer
 
 from rest_framework.views import APIView
@@ -166,5 +167,52 @@ class DisponibilidadMedicamentoAPIView(APIView):
                     "institucion": stock.institucion.id,
                     "cantidad": stock.cantidad
                 })
+        
+        return Response(resultado, status=status.HTTP_200_OK)
+
+
+class QuiebreStockAPIView(APIView):
+    def get(self, request):
+        stocks = Stock.objects.select_related('institucion')
+
+        if not stocks.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        resultado = []
+
+        for stock in stocks:
+            medicamento_id = stock.medicamento.id
+            if medicamento_id not in resultado:
+                resultado_obj = {
+                    "institucion": stock.institucion.id,
+                    "medicamento": medicamento_id,
+                    "quiebre": 0,
+                    "stock": 0
+                }
+            resultado_obj["quiebre"] += stock.cantidad if stock.has_quiebre else 0
+            resultado_obj["stock"] += stock.cantidad
+            resultado.append(resultado_obj)
+        
+        return Response(resultado, status=status.HTTP_200_OK)
+
+class AlertaCaducidadLoteAPIView(APIView):
+    def get(self, request):
+        lotes = Lote.objects.select_related('medicamento')
+
+        if not lotes.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        resultado = []
+
+        for lote in lotes:
+            if lote.fecha_vencimiento <= date.today():
+                objeto = {
+                    "id": lote.id,
+                    "codigo": lote.codigo,
+                    "medicamento": lote.medicamento.id,
+                    "cantidad": lote.cantidad,
+                    "fecha_vencimiento": lote.fecha_vencimiento.strftime("%Y-%m-%d")
+                }
+                resultado.append(objeto)
         
         return Response(resultado, status=status.HTTP_200_OK)

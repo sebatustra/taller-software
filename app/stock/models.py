@@ -84,6 +84,7 @@ class Stock(models.Model):
             self.has_quiebre = self.cantidad <= quiebre.cantidad
         else:
             self.has_quiebre = False
+        self.save()
 
     ###################################################################
 
