@@ -1,9 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import date
 
 # from maestro.models import Medicamento
-from .models import Consumo, Movimiento, Medicamento, Stock
+from .models import Consumo, Movimiento, Medicamento, Stock, Lote
 from .serializers import MovimientoSerializer, ConsumoSerializer
 
 from rest_framework.views import APIView
@@ -194,5 +195,24 @@ class QuiebreStockAPIView(APIView):
         
         return Response(resultado, status=status.HTTP_200_OK)
 
+class AlertaCaducidadLoteAPIView(APIView):
+    def get(self, request):
+        lotes = Lote.objects.select_related('medicamento')
 
-        # Syntax: true_value if condition else false_value
+        if not lotes.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        resultado = []
+
+        for lote in lotes:
+            if lote.fecha_vencimiento <= date.today():
+                objeto = {
+                    "id": lote.id,
+                    "codigo": lote.codigo,
+                    "medicamento": lote.medicamento.id,
+                    "cantidad": lote.cantidad,
+                    "fecha_vencimiento": lote.fecha_vencimiento.strftime("%Y-%m-%d")
+                }
+                resultado.append(objeto)
+        
+        return Response(resultado, status=status.HTTP_200_OK)
