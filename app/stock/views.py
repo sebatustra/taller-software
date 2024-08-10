@@ -168,3 +168,31 @@ class DisponibilidadMedicamentoAPIView(APIView):
                 })
         
         return Response(resultado, status=status.HTTP_200_OK)
+
+
+class QuiebreStockAPIView(APIView):
+    def get(self, request):
+        stocks = Stock.objects.select_related('institucion')
+
+        if not stocks.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        resultado = []
+
+        for stock in stocks:
+            medicamento_id = stock.medicamento.id
+            if medicamento_id not in resultado:
+                resultado_obj = {
+                    "institucion": stock.institucion.id,
+                    "medicamento": medicamento_id,
+                    "quiebre": 0,
+                    "stock": 0
+                }
+            resultado_obj["quiebre"] += stock.cantidad if stock.has_quiebre else 0
+            resultado_obj["stock"] += stock.cantidad
+            resultado.append(resultado_obj)
+        
+        return Response(resultado, status=status.HTTP_200_OK)
+
+
+        # Syntax: true_value if condition else false_value
